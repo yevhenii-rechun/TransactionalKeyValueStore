@@ -1,6 +1,7 @@
 package cmd
 
 import Readme
+import store.StoreApi
 
 fun main() {
     println("Welcome to Transactional Key-Value store!")
@@ -9,7 +10,7 @@ fun main() {
 
     Readme.print()
 
-    val store = CmdStoreWrapper()
+    val store = CmdStoreWrapper(StoreApi.provideConcurrentUnsafeStore())
 
     var request = readlnOrNull()
     while (request != null) {

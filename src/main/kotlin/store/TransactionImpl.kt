@@ -15,13 +15,13 @@ internal class TransactionImpl(
     override val id: Long = transactionResult.id
 
     override fun commit(): Transaction.Result {
-        requiredNoInnerTransactions()
+        requireNoInnerTransactions()
         transactionAction.onCommit(resultState)
         return transactionResult
     }
 
     override fun rollback(): Transaction.Result {
-        requiredNoInnerTransactions()
+        requireNoInnerTransactions()
         transactionAction.onRollback()
         return transactionResult
     }
@@ -63,21 +63,8 @@ internal class TransactionImpl(
         resultState.putAll(newState)
     }
 
-    private fun requiredNoInnerTransactions() {
+    private fun requireNoInnerTransactions() {
         if (hasUnfinishedInnerTransaction) throw IllegalStateException("Finalize all inner transactions first")
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is TransactionImpl) return false
-
-        if (id != other.id) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return id.hashCode()
     }
 
     companion object IdGenerator {

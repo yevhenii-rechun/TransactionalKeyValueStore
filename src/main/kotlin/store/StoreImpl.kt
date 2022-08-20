@@ -25,7 +25,7 @@ internal class StoreImpl : Store {
 
     override fun beginTransaction(): Transaction {
         val storeSnapshot = HashMap(store)
-        return TransactionImpl(HashMap(storeSnapshot), object : TransactionAction {
+        return TransactionImpl(HashMap(storeSnapshot), transactionAction = object : TransactionAction {
             override fun onCommit(newState: HashMap<String, String>) {
                 store.putAll(newState)
                 storeSnapshot.forEach { (key) ->

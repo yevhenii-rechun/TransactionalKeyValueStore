@@ -1,13 +1,12 @@
 package cmd
 
-import store.StoreApi
+import store.Store
 import store.Transaction
 import store.Transactional
 import java.util.LinkedList
 
-class CmdStoreWrapper {
+class CmdStoreWrapper(private val store: Store) {
 
-    private val store = StoreApi.provideConcurrentUnsafeStore()
     private val transactions = LinkedList<Transaction>()
 
     fun get(key: String) {

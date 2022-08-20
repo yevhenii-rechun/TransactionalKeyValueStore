@@ -9,7 +9,7 @@ interface Transactional {
 }
 
 @OptIn(ExperimentalContracts::class)
-inline fun Transactional.runInTransaction(body: Transaction.() -> Transaction.Result) {
+inline fun Transactional.runInnerTransaction(body: Transaction.() -> Transaction.Result) {
     contract { callsInPlace(body, InvocationKind.EXACTLY_ONCE) }
 
     val transaction = beginTransaction()
