@@ -7,3 +7,5 @@ interface Transaction : Store, Transactional {
 
     class Result internal constructor(val id: Long)
 }
+
+class TransactionForbiddenModificationException() : Exception("Transaction is already committed or discarded, cannot be modified.")

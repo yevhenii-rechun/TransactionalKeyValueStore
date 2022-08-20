@@ -16,6 +16,6 @@ inline fun Transactional.runInnerTransaction(body: Transaction.() -> Transaction
     val result = body(transaction)
 
     if (transaction.id != result.id) {
-        throw RuntimeException("Committing wrong transaction. Actual transaction id: ${transaction.id}, but committing: ${result.id}")
+        throw RuntimeException("Committing or discarding wrong transaction. Actual transaction id: ${transaction.id}, but providing: ${result.id}")
     }
 }

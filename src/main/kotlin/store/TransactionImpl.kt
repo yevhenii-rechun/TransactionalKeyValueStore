@@ -10,39 +10,42 @@ internal class TransactionImpl(
     private val transactionResult = Transaction.Result(nextId())
     private val resultState = HashMap(storeState)
 
+    private var isAlive = true
     private var hasUnfinishedInnerTransaction = false
 
     override val id: Long = transactionResult.id
 
-    override fun commit(): Transaction.Result {
+    override fun commit(): Transaction.Result = whenValid {
         requireNoInnerTransactions()
+        isAlive = false
         transactionAction.onCommit(resultState)
-        return transactionResult
+        transactionResult
     }
 
-    override fun rollback(): Transaction.Result {
+    override fun rollback(): Transaction.Result = whenValid {
         requireNoInnerTransactions()
+        isAlive = false
         transactionAction.onRollback()
-        return transactionResult
+        transactionResult
     }
 
-    override fun get(key: String): String? {
-        return resultState[key]
+    override fun get(key: String): String? = whenValid {
+        resultState[key]
     }
 
-    override fun set(key: String, value: String) {
+    override fun set(key: String, value: String) = whenValid {
         resultState[key] = value
     }
 
-    override fun delete(key: String): Boolean {
+    override fun delete(key: String): Boolean = whenValid {
         return resultState.remove(key) != null
     }
 
-    override fun count(value: String): Int {
+    override fun count(value: String): Int = whenValid {
         return resultState.count { it.value == value }
     }
 
-    override fun beginTransaction(): TransactionImpl {
+    override fun beginTransaction(): TransactionImpl = whenValid {
         hasUnfinishedInnerTransaction = true
         return TransactionImpl(HashMap(resultState), object : TransactionAction {
             override fun onCommit(newState: HashMap<String, String>) {
@@ -65,6 +68,10 @@ internal class TransactionImpl(
 
     private fun requireNoInnerTransactions() {
         if (hasUnfinishedInnerTransaction) throw IllegalStateException("Finalize all inner transactions first")
+    }
+
+    private inline fun <T> whenValid(block: () -> T): T {
+        return if (isAlive) block() else throw TransactionForbiddenModificationException()
     }
 
     companion object IdGenerator {
