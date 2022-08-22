@@ -19,9 +19,9 @@ internal class StoreTest {
     @Test
     fun `GIVEN delete element in transaction WHEN transaction is empty THEN other transactions affected`() {
         store.set("a", "1")
-        store.runInTransaction {
+        store.runInnerTransaction {
             assertEquals("1", get("a"))
-            runInTransaction {
+            runInnerTransaction {
                 assertEquals("1", get("a"))
                 delete("a")
                 commit()
@@ -35,14 +35,14 @@ internal class StoreTest {
     @Test
     fun `GIVEN multiple inner transactions in one WHEN commit all THEN latest value saved`() {
         assertNull(store.get("a"))
-        store.runInTransaction {
-            runInTransaction {
+        store.runInnerTransaction {
+            runInnerTransaction {
                 set("a", "1")
                 assertEquals("1", get("a"))
                 commit()
             }
             assertEquals("1", get("a"))
-            runInTransaction {
+            runInnerTransaction {
                 set("a", "2")
                 commit()
             }
@@ -55,7 +55,7 @@ internal class StoreTest {
     @Test
     fun `GIVEN inner transactions WHEN committing root transaction having unfinished inner transaction THEN should crash`() {
         assertThrows<IllegalStateException> {
-            store.runInTransaction {
+            store.runInnerTransaction {
                 beginTransaction()
                 commit()
             }
@@ -65,9 +65,9 @@ internal class StoreTest {
     @Test
     fun `WHEN committing wrong transaction THEN expecting crash`() {
         assertThrows<RuntimeException> {
-            store.runInTransaction {
+            store.runInnerTransaction {
                 val t = this
-                runInTransaction {
+                runInnerTransaction {
                     t.commit()
                 }
                 commit()
@@ -81,13 +81,13 @@ internal class StoreTest {
         assertNull(store.get("b"))
 
         fun commitDifferentTransaction() {
-            store.runInTransaction {
+            store.runInnerTransaction {
                 set("a", "1")
                 commit()
             }
         }
 
-        store.runInTransaction {
+        store.runInnerTransaction {
             assertNull(get("a"))
             assertNull(get("b"))
 
@@ -111,12 +111,12 @@ internal class StoreTest {
         assertNull(store.get("c"))
         assertNull(store.get("d"))
         assertNull(store.get("e"))
-        store.runInTransaction {
-            runInTransaction {
+        store.runInnerTransaction {
+            runInnerTransaction {
                 set("a", "1")
-                runInTransaction {
+                runInnerTransaction {
                     set("b", "2")
-                    runInTransaction {
+                    runInnerTransaction {
                         set("c", "3")
                         commit()
                     }
@@ -138,9 +138,9 @@ internal class StoreTest {
     @Test
     fun `GIVEN inner transaction WHEN setting value after inner transaction THEN the last set value is in store`() {
         assertNull(store.get("a"))
-        store.runInTransaction {
+        store.runInnerTransaction {
             set("a", "1")
-            runInTransaction {
+            runInnerTransaction {
                 set("a", "11")
                 assertEquals("11", get("a"))
                 delete("a")
@@ -158,11 +158,11 @@ internal class StoreTest {
     fun `GIVEN inner transactions WHEN setting the same value and commit THEN only last one is saved`() {
         store.set("a", "1")
 
-        store.runInTransaction {
+        store.runInnerTransaction {
             set("a", "1")
-            runInTransaction {
+            runInnerTransaction {
                 set("a", "11")
-                runInTransaction {
+                runInnerTransaction {
                     set("a", "111")
                     commit()
                 }
@@ -178,9 +178,9 @@ internal class StoreTest {
     fun `GIVEN inner transactions WHEN delete and commit all THEN transactions impacted recursively`() {
         store.set("a", "1")
 
-        store.runInTransaction {
-            runInTransaction {
-                runInTransaction {
+        store.runInnerTransaction {
+            runInnerTransaction {
+                runInnerTransaction {
                     delete("a")
                     commit()
                 }
@@ -198,7 +198,7 @@ internal class StoreTest {
     fun `GIVEN single transaction WHEN reading store before commit THEN store is not updated before commit and only after`() {
         store.set("a", "1")
 
-        store.runInTransaction {
+        store.runInnerTransaction {
             set("a", "11")
             set("b", "22")
 
@@ -224,7 +224,7 @@ internal class StoreTest {
         assertEquals("2", store.get("b"))
         assertEquals("3", store.get("c"))
 
-        store.runInTransaction {
+        store.runInnerTransaction {
 
             assertEquals("1", get("a"))
             assertEquals("2", get("b"))
@@ -237,7 +237,7 @@ internal class StoreTest {
             assertEquals("22", get("b"))
             assertEquals("3", get("c"))
 
-            runInTransaction {
+            runInnerTransaction {
                 set("a", "111")
 
                 assertEquals("111", get("a"))
@@ -263,13 +263,13 @@ internal class StoreTest {
     fun `GIVEN many items set in nested transactions WHEN count THEN all transactions count upstream values`() {
         assertEquals(0, store.count("1"))
 
-        store.runInTransaction {
+        store.runInnerTransaction {
             set("a", "1")
             assertEquals(1, count("1"))
-            runInTransaction {
+            runInnerTransaction {
                 set("b", "1")
                 assertEquals(2, count("1"))
-                runInTransaction {
+                runInnerTransaction {
                     set("c", "1")
                     assertEquals(3, count("1"))
                     commit()
@@ -285,13 +285,13 @@ internal class StoreTest {
 
     @Test
     fun `GIVEN inner transaction WHEN rollback and commit in different order THEN transactions dont fail`() {
-        store.runInTransaction {
-            runInTransaction {
-                runInTransaction {
-                    runInTransaction {
-                        runInTransaction {
-                            runInTransaction {
-                                runInTransaction {
+        store.runInnerTransaction {
+            runInnerTransaction {
+                runInnerTransaction {
+                    runInnerTransaction {
+                        runInnerTransaction {
+                            runInnerTransaction {
+                                runInnerTransaction {
                                     commit()
                                 }
                                 commit()
