@@ -11,7 +11,7 @@ within it without impacting original store before committing transaction.
 - delete(key) // deletes value by specified key
 - beginTransaction() // begins a new transaction and returns its reference
 - transaction.commit() // commits receiver transaction and save all its actions to either upstream transaction or
-  directly to the store, depedning in which scope it was created
+  directly to the store, depending on which scope it was created
 - transaction.rollback() // rollbacks transaction and all its actions
 
 ## How to use command line sample
